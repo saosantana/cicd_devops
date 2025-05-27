@@ -1,0 +1,12 @@
+{
+  "name": "cicd_devops",
+  "version": "1.0.0",
+  "description": "Repositório para matéria de DevOps na prática da PUCRS-Online",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
