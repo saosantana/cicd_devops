@@ -4,7 +4,7 @@
   "description": "Repositório para matéria de DevOps na prática da PUCRS-Online",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Sem testes por enquanto\""
   },
   "keywords": [],
   "author": "",
