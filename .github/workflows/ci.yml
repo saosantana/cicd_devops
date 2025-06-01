@@ -1,15 +1,16 @@
-name: CI/CD Pipeline
+name: CI/CD com Docker e Deploy na EC2
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout código
+      - name: Checkout do código
         uses: actions/checkout@v3
 
       - name: Setup Node.js
@@ -28,36 +29,27 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout código
+      - name: Checkout do código
         uses: actions/checkout@v3
 
-      - name: Configurar chave SSH e host
+      - name: Configurar chave SSH
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.CHAVE_SSH_EC2 }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
+
+      - name: Adicionar EC2 à lista de hosts conhecidos
+        run: |
           ssh-keyscan -H ec2-18-222-186-46.us-east-2.compute.amazonaws.com >> ~/.ssh/known_hosts
 
-      - name: Deploy na EC2
+      - name: Enviar arquivos do projeto para EC2
         run: |
-          ssh -i ~/.ssh/id_rsa ec2-user@ec2-18-222-186-46.us-east-2.compute.amazonaws.com 'bash -s' <<'EOF'
-            # Instalar Node.js e npm (Node 18 LTS)
-            curl -fsSL https://rpm.nodesource.com/setup_18.x | sudo bash -
-            sudo yum install -y nodejs
+          rsync -avz -e "ssh -i ~/.ssh/id_rsa" ./ ec2-user@ec2-18-222-186-46.us-east-2.compute.amazonaws.com:~/app
 
-            # Preparar pasta do app
-            mkdir -p ~/app && cd ~/app
-            pkill node || true
-            rm -rf *
-          EOF
-
-          scp -i ~/.ssh/id_rsa -r ./* ec2-user@ec2-18-222-186-46.us-east-2.compute.amazonaws.com:~/app
-
-          ssh -i ~/.ssh/id_rsa ec2-user@ec2-18-222-186-46.us-east-2.compute.amazonaws.com 'bash -s' <<'EOF'
+      - name: Rodar deploy com Docker na EC2
+        run: |
+          ssh -i ~/.ssh/id_rsa ec2-user@ec2-18-222-186-46.us-east-2.compute.amazonaws.com << 'EOF'
             cd ~/app
-            npm install
-            nohup npm start > output.log 2>&1 &
+            chmod +x deploy.sh
+            ./deploy.sh
           EOF
-
-
-
