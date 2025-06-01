@@ -1,9 +1,7 @@
-name: CI Pipeline
+name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ "main" ]
-  pull_request:
     branches: [ "main" ]
 
 jobs:
@@ -14,7 +12,7 @@ jobs:
       - name: Checkout código
         uses: actions/checkout@v3
 
-      - name: Configurar Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18'
@@ -24,5 +22,38 @@ jobs:
 
       - name: Rodar testes
         run: npm test
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v3
+
+      - name: Configurar chave SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
+      - name: Adicionar host conhecido
+        run: ssh-keyscan -H 18.222.186.46 >> ~/.ssh/known_hosts
+
+      - name: Deploy na EC2
+        run: |
+          ssh ec2-18-222-186-46.us-east-2.compute.amazonaws.com << 'EOF'
+            cd ~/app || mkdir -p ~/app && cd ~/app
+            pkill node || true
+            rm -rf *
+            EOF
+
+          scp -r ./* ec2-18-222-186-46.us-east-2.compute.amazonaws.com:~/app
+
+          ssh ec2-18-222-186-46.us-east-2.compute.amazonaws.com << 'EOF'
+            cd ~/app
+            npm install
+            nohup npm start > output.log 2>&1 &
+          EOF
 
 

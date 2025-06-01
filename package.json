@@ -4,7 +4,11 @@
   "description": "Repositório para matéria de DevOps na prática da PUCRS-Online",
   "main": "index.js",
   "scripts": {
+    "start": "node index.js",
     "test": "echo \"Sem testes por enquanto\""
+  },
+  "dependencies": {
+    "express": "^4.18.2"
   },
   "keywords": [],
   "author": "",
